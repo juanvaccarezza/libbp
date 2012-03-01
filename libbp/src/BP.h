@@ -11,8 +11,9 @@
 
 typedef struct _BP{
 	uint8_t dummy;
+	int deviceDescriptor;
 } BP;
 
-BPResult BP_connect(BP * this);
+BPResult BP_connect(BP * this, const char * deviceName);
 
 #endif /* BP_H_ */
