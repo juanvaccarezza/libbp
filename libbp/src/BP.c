@@ -1,19 +1,18 @@
 /*
- *
  *  Created on: Feb 29, 2012
  *      Author: juan
  */
 #include <fcntl.h>
 #include <stdio.h>
-#include "BP.h"
-#include "Log.h"
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include "BP.h"
+#include "Log.h"
 
 BPResult BP_connect(BP * this, const char * deviceName) {
 	struct termios tios;
-
+	
 	Log_debug("Connecting to %s.\n", deviceName);
 	this->deviceDescriptor = open(deviceName, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
@@ -107,7 +106,7 @@ BPResult BP_read(BP * this, uint8_t * buffer, uint32_t size) {
 BPResult BP_enterBinaryMode(BP * this) {
 	Log_debug("Entering binary.\n");
 	bool done = false;
-	int ntries = 0; /* Send >=20 times binary reset */
+	int ntries = 0; 
 	uint32_t size = 5;
 	uint8_t buffer[size];
 
