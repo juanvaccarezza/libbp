@@ -9,7 +9,8 @@
 
 typedef enum _BPResult {
 	BPOK = 0,
-	BPFAIL
+	BPFAIL,
+	BPTIMEOUT
 } BPResult;
 
 #endif /* ERRORS_H_ */
