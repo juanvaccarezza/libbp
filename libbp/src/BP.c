@@ -127,6 +127,7 @@ BPResult BP_enterBinaryMode(BP * this) {
 }
 
 BPResult BP_disconnect(BP * this) {
-	return BPFAIL;
+	//TODO close the file
+	return BP_write(this,0X0F);
 }
 
