@@ -13,6 +13,8 @@
 #define Log_debug printf
 #define Log_info printf
 #define Log_error printf
+#define Log_warn printf
 
 
 #endif /* LOG_H_ */
+
