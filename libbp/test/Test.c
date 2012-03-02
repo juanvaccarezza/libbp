@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
 	if (result == BPOK) {
 		printf("Disconnect OK!! \n");
 	} else {
-		printf("Connect fail :( \n");
+		printf("Disconnect fail :( \n");
 	}
 	return 0;
 }
