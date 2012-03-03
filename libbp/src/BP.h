@@ -21,19 +21,20 @@ typedef enum _BP_PIN_STATE {
 } BP_PIN_STATE;
 
 typedef enum _BP_PIN {
-	BP_PIN_POWER = 1 < 6,
-	BP_PIN_PULLUP = 1 < 5,
-	BP_PIN_AUX = 1 < 4,
-	BP_PIN_MOSI = 1 < 3,
-	BP_PIN_CLK = 1 < 2,
-	BP_PIN_MISO = 1 < 1,
-	BP_PIN_CS = 1 < 0,
+	BP_PIN_POWER = 1 << 6,
+	BP_PIN_PULLUP = 1 << 5,
+	BP_PIN_AUX = 1 << 4,
+	BP_PIN_MOSI = 1 << 3,
+	BP_PIN_CLK = 1 << 2,
+	BP_PIN_MISO = 1 << 1,
+	BP_PIN_CS = 1 << 0,
 } BP_PIN;
 
 typedef struct _BP {
 	int deviceDescriptor;
 	char buffer[BUFFER_SIZE];
 	struct termios originalDeviceConfiguration;
+	uint8_t pinValues;
 } BP;
 
 BPResult BP_connect(BP * this, const char * deviceName);

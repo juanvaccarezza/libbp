@@ -10,9 +10,11 @@
 #include "BP.h"
 #include "Log.h"
 
+BPResult BP_oneByteCommandWR(BP * this, uint8_t command, uint8_t * response);
+
 BPResult BP_connect(BP * this, const char * deviceName) {
 	struct termios tios;
-
+	this->pinValues=0;
 	Log_debug("Connecting to %s.\n", deviceName);
 	this->deviceDescriptor = open(deviceName, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
@@ -149,12 +151,70 @@ BPResult BP_disconnect(BP * this) {
 		return BPFAIL;
 	}
 
-
-	if(close(this->deviceDescriptor)<0){
-		Log_error("Erro while closing the file\n");
+	if (close(this->deviceDescriptor) < 0) {
+		Log_error("Error while closing the file\n");
 		return BPFAIL;
 	}
 	return result;
 
+}
+
+BPResult BP_writePins(BP * this) {
+	uint8_t newStatus;
+	// add a 1 in the MSB of the command.
+	uint8_t command = this->pinValues | (1 << 7);
+
+	if (BP_oneByteCommandWR(this, command, &newStatus) == BPFAIL) {
+		Log_error("Error commanding pin status");
+		return BPFAIL;
+	}
+
+	this->pinValues = newStatus;
+	return BPOK;
+}
+
+BPResult BP_configure(BP * this, BP_PIN_CONFIG aux, BP_PIN_CONFIG mosi,
+		BP_PIN_CONFIG clk, BP_PIN_CONFIG miso, BP_PIN_CONFIG cs) {
+	uint8_t response;
+	uint8_t command = 1 << 6;
+	command |= (aux == BP_PIN_CONFIG_INPUT ? BP_PIN_AUX : 0);
+	command |= (mosi == BP_PIN_CONFIG_INPUT ? BP_PIN_MOSI : 0);
+	command |= (clk == BP_PIN_CONFIG_INPUT ? BP_PIN_CLK : 0);
+	command |= (miso == BP_PIN_CONFIG_INPUT ? BP_PIN_MISO : 0);
+	command |= (cs == BP_PIN_CONFIG_INPUT ? BP_PIN_CS : 0);
+
+	if (BP_oneByteCommandWR(this, command, &response)) {
+		Log_error("Error commanding pin configuration");
+		return BPFAIL;
+	}
+
+	if ((response & 0x1F) != (command & 0x1F)) {
+		Log_debug(
+				"Bit config readback differ from commanded expected: %X obtained: %X\n",
+				(command & 0x1F), (response & 0x1F));
+		return BPFAIL;
+	}
+	return BPOK;
+}
+
+BPResult BP_oneByteCommandWR(BP * this, uint8_t command, uint8_t * response) {
+	Log_debug("BP_oneByteCommandWR: Sending command; %X\n", command);
+	if (BP_write(this, command) == BPFAIL) {
+		Log_error("Error writing command to device\n");
+		return BPFAIL;
+	}
+	if (BP_read(this, response, 1) == BPFAIL) {
+		Log_error("Error reading back command response status\n");
+		return BPFAIL;
+	}
+	Log_debug("BP_oneByteCommandWR: Obtained command; %X\n", *response);
+	return BPOK;
+}
+
+BPResult BP_pinSet(BP * this, BP_PIN pin, BP_PIN_STATE state) {
+	Log_debug("Configuring pin %d with %d", pin, state);
+	this->pinValues = (this->pinValues & ~pin)
+			| (state == BP_PIN_STATE_ON ? pin : 0);
+	return BPOK;
 }
 
