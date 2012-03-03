@@ -12,7 +12,7 @@
 
 BPResult BP_connect(BP * this, const char * deviceName) {
 	struct termios tios;
-	
+
 	Log_debug("Connecting to %s.\n", deviceName);
 	this->deviceDescriptor = open(deviceName, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
@@ -92,7 +92,8 @@ BPResult BP_read(BP * this, uint8_t * buffer, uint32_t size) {
 	}
 
 	while (numLeft > 0) {
-		numc_read = read(this->deviceDescriptor, &buffer[size - numLeft], numLeft);
+		numc_read = read(this->deviceDescriptor, &buffer[size - numLeft],
+				numLeft);
 		if (numc_read < 0) {
 			Log_debug("ERROR  read\n");
 			return BPFAIL;
@@ -106,7 +107,7 @@ BPResult BP_read(BP * this, uint8_t * buffer, uint32_t size) {
 BPResult BP_enterBinaryMode(BP * this) {
 	Log_debug("Entering binary.\n");
 	bool done = false;
-	int ntries = 0; 
+	int ntries = 0;
 	uint32_t size = 5;
 	uint8_t buffer[size];
 
@@ -127,7 +128,27 @@ BPResult BP_enterBinaryMode(BP * this) {
 }
 
 BPResult BP_disconnect(BP * this) {
-	//TODO close the file
-	return BP_write(this,0X0F);
+	BPResult result;
+	result = BP_write(this, 0X0F);
+	if (result != BPOK) {
+		Log_error("Fail to set the BP to text mode.\n");
+		goto fail;
+	}
+
+	if (tcsetattr(this->deviceDescriptor, TCSAFLUSH,
+			&this->originalDeviceConfiguration) < 0) {
+		Log_error("Error while restoring device attributes.\n");
+		result = BPFAIL;
+		goto fail;
+	}
+
+	if (this->deviceDescriptor >= 0)
+		close(this->deviceDescriptor);
+
+	return result;
+
+	fail:
+	return result;
+
 }
 
