@@ -129,25 +129,31 @@ BPResult BP_enterBinaryMode(BP * this) {
 
 BPResult BP_disconnect(BP * this) {
 	BPResult result;
+
+	if (this->deviceDescriptor < 0) {
+		Log_error("Descriptor not open.\n");
+		return BPFAIL;
+	}
+
 	result = BP_write(this, 0X0F);
+
 	if (result != BPOK) {
 		Log_error("Fail to set the BP to text mode.\n");
-		goto fail;
+		return BPFAIL;
 	}
 
 	if (tcsetattr(this->deviceDescriptor, TCSAFLUSH,
 			&this->originalDeviceConfiguration) < 0) {
 		Log_error("Error while restoring device attributes.\n");
 		result = BPFAIL;
-		goto fail;
+		return BPFAIL;
 	}
 
-	if (this->deviceDescriptor >= 0)
-		close(this->deviceDescriptor);
 
-	return result;
-
-	fail:
+	if(close(this->deviceDescriptor)<0){
+		Log_error("Erro while closing the file\n");
+		return BPFAIL;
+	}
 	return result;
 
 }
